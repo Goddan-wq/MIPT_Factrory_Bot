@@ -1,0 +1,1 @@
+# MIPT_Factrory_Bot
