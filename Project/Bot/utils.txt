@@ -1,0 +1,307 @@
+// // // Подклоючаем библиотеку Servo
+// // #include <Servo.h> 
+
+// // // Пин для сервопривода
+// // int servoPin = 3;
+// // int angle = 0;
+
+// // // Создаем объект
+// // Servo Servo1;
+
+// // void setup() {
+// //   // Нам нужно подключить сервопривод к используемому номеру пина
+// //   Servo1.attach(servoPin);
+// // }
+
+// // void loop(){
+// //   // 0 градусов
+// //   angle += 10;
+// //   Servo1.write(0);
+// //   delay(10);
+// // }
+
+
+
+// #include "Servo.h"
+// #include "AmperkaStepper.h"
+// Servo servo;
+// int angle; // переменная для угла поворота микро серво
+
+// void smoothRotate(int angle1, int angle2, Servo servo) {
+//   for (angle = 0; angle <= 90; angle++) {
+//     servo.write(angle); // сообщаем микро серво угол поворота
+//     delay(20); // ждем 20 мс, пока серво не сделает поворот
+//   }
+// }
+
+// #define IN1 1
+
+// void setup() {
+//   servo.attach(3); // пин для подключения микро серво
+//   pinMode(IN1, OUTPUT);
+
+// }
+
+// void loop() {
+//   smoothRotate(0, 90, servo);
+// }
+
+
+
+
+// пины для управления Motor Shield
+#define E1          5
+#define E2          6
+#define H1          4
+#define H2          7
+ 
+// три режима управления шаговым мотором
+// однофазный режим
+#define WAVE_DRIVE  0
+// двухфазный режим
+#define FULL_STEP   1
+// полушаговый режим
+#define HALF_STEP   2
+ 
+// задержка между переключением обмоток
+// определяет скорость вращения
+int delayTime = 1000000;
+ 
+unsigned long startTime;
+ 
+// функция выставляет значение на пинах
+void doStep(bool E1State, bool H1State, bool E2State, bool H2State) {
+  digitalWrite(E1, E1State);
+  digitalWrite(H1, H1State);
+  digitalWrite(E2, E2State);
+  digitalWrite(H2, H2State);
+  delay(delayTime);
+}
+ 
+// определяем комбинации управляющих импульсов в зависимости от режима
+void rotate(byte rotateMode) {
+  switch (rotateMode) {
+    case WAVE_DRIVE:
+      doStep(1, 1, 0, 0);
+      doStep(0, 0, 1, 1);
+      doStep(1, 0, 0, 0);
+      doStep(0, 0, 1, 0);
+      break;
+ 
+    case FULL_STEP:
+      doStep(1, 1, 1, 1);
+      doStep(1, 0, 1, 1);
+      doStep(1, 0, 1, 0);
+      doStep(1, 1, 1, 0);
+      break;
+ 
+    case HALF_STEP:
+      doStep(1, 1, 0, 0);
+      doStep(1, 1, 1, 1);
+      doStep(0, 0, 1, 1);
+      doStep(1, 0, 1, 1);
+ 
+      doStep(1, 0, 0, 0);
+      doStep(1, 0, 1, 0);
+      doStep(0, 0, 1, 0);
+      doStep(1, 1, 1, 0);
+      break;
+  }
+}
+ 
+void setup() {
+  // настраиваем ножки на выход
+  for (int i = 4; i < 8; i++) {
+    pinMode(i, OUTPUT);
+  }
+  // запоминаем текущее время
+  startTime = millis();
+}
+ 
+void loop() {
+  // узнаём время прошедшее с начала работы в миллисекундах
+  // и переводим его в секунды
+  unsigned long loopTime = (millis() - startTime) / 1000;
+  // меняем режим каждую секунду
+  rotate(loopTime % 3);
+}
+
+
+
+
+
+
+
+
+    // массив, для получения данных
+    int data[2]={}; 
+ 
+    // если что-то удалось получить
+    if (radio.available()){ 
+        // читаем данные    
+        radio.read(&data, sizeof(data)); 
+        // вывод первого элемента массива
+        Serial.print("data[0]: "); 
+        Serial.print(data[0]); 
+        LeftServo.write(data[0]);
+         
+        // вывод второго элемента массива
+        Serial.print(" data[1]: ");
+        Serial.println(data[1]); 
+    }   
+
+
+
+
+    // инициализация nRF24L01+
+    radio.begin(); 
+    // задаем канал для приёма данных. Идентично передатчику
+    radio.setChannel(0); 
+    // Скорость передачи данных. Идентично передатчику
+    radio.setDataRate (RF24_1MBPS); 
+    // Мощность передатчика. Идентично передатчику
+    radio.setPALevel (RF24_PA_HIGH); 
+    // Открываем 1 трубу с идентификатором 0x1234567890
+    radio.openReadingPipe (1, 0x1234567890LL); 
+    // Включаем приемник и слушаем открытую трубу
+    radio.startListening (); 
+ 
+    // монитор порта
+    Serial.begin(9600);
+
+    // приемник
+ 
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+RF24 radio(9, 10);
+
+
+
+
+
+
+старый код
+
+
+
+#include "Servo.h"
+#include "AmperkaStepper.h"
+#include "Bot.h"
+
+Servo ServoLeft;
+Servo ServoRigh;
+
+void setup() {
+
+    ServoLeft.attach(SERVO_LEFT_PIN);        // Инициализация сервоприводов
+    ServoRigh.attach(SERVO_RIGH_PIN);
+
+    pinMode(S1, OUTPUT);                     // Инициализация моторов
+    pinMode(S2, OUTPUT);
+    pinMode(D1, OUTPUT);
+    pinMode(D2, OUTPUT);
+
+}
+
+void loop() {
+    
+    X = analogRead(Xaxis);               // Считываем значения оси Х
+    Y = analogRead(Yaxis);               // Считываем значения оси У
+
+    X = map(X, 0, 1023, 0, 180);         // переводим значение X в новый диапазон
+    Y = map(Y, 0, 1023, 0, 510);         // переводим значение Y в новый диапазон
+
+    ServoLeft.write(X);                  // поворачиваем сервопривод от джойстика
+    ServoRigh.write(X);                  // поворачиваем сервопривод от джойстика
+
+    if (Y > 255) {
+        analogWrite(S2, Y - 255);  
+        digitalWrite(D1, HIGH);
+        digitalWrite(D2, LOW);
+    }
+    else {
+        analogWrite(S2, 255 - Y);
+        digitalWrite(D1, LOW);
+        digitalWrite(D2, HIGH);
+    }
+
+    if (Y > 255) {
+        analogWrite(S1, Y - 255);  
+        digitalWrite(D1, HIGH);
+        digitalWrite(D2, LOW);
+    }
+    else {
+        analogWrite(S1, 255 - Y);
+        digitalWrite(D1, LOW);
+        digitalWrite(D2, HIGH);
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+rabochee
+
+
+
+
+#include "Servo.h"
+#include "AmperkaStepper.h"
+#include "Bot.h"
+
+Servo ServoLeft;
+Servo ServoRigh;
+
+void setup() {
+
+    ServoLeft.attach(SERVO_LEFT_PIN);        // Инициализация сервоприводов
+    ServoRigh.attach(SERVO_RIGH_PIN);
+
+    pinMode(S1, OUTPUT);                     // Инициализация моторов
+    pinMode(S2, OUTPUT);
+    pinMode(D1, OUTPUT);
+    pinMode(D2, OUTPUT);
+
+}
+
+void loop() {
+    
+    X = analogRead(Xaxis);               // Считываем значения оси Х
+    Y = analogRead(Yaxis);               // Считываем значения оси У
+
+    X = map(X, 0, 1023, 0, 180);         // переводим значение X в новый диапазон
+    Y = map(Y, 0, 1023, 0, 510);         // переводим значение Y в новый диапазон
+
+    ServoLeft.write(X);                  // поворачиваем сервопривод от джойстика
+    ServoRigh.write(X);                  // поворачиваем сервопривод от джойстика
+
+    if (Y > 255) {
+        analogWrite(S2, Y - 255);  
+        digitalWrite(D2, LOW);
+    }
+    else {
+        analogWrite(S2, 255 - Y);
+        digitalWrite(D2, HIGH);
+    }
+
+    if (Y > 255) {
+        analogWrite(S1, Y - 255);  
+        digitalWrite(D1, HIGH);
+    }
+    else {
+        analogWrite(S1, 255 - Y);
+        digitalWrite(D1, LOW);
+    }
+
+}
